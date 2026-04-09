@@ -1,17 +1,31 @@
-# fitsmart
+# 🏋️ FitSmart - AI-Powered Fitness & Meal Planner
 
-A new Flutter project.
+A Flutter mobile application that helps users track meals, workouts, and get AI-powered personalized recommendations.
 
-## Getting Started
+![Flutter](https://img.shields.io/badge/Flutter-3.41.5-blue?logo=flutter)
+![Firebase](https://img.shields.io/badge/Firebase-Integrated-orange?logo=firebase)
+![AI](https://img.shields.io/badge/AI-Google%20Gemini-green)
 
-This project is a starting point for a Flutter application.
+---
 
-A few resources to get you started if this is your first Flutter project:
+## ✨ Features
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+### 🤖 AI-Powered Features
+- **📸 Food Recognition**: Snap a photo of your meal → AI identifies food items and calculates nutritional info
+- **💪 Personalized Workout Generator**: Get custom workout plans based on your profile, goals, and recent activity
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### 📊 Core Features
+- **Dashboard** with calorie tracking and daily summaries
+- **Meal Logging** with manual entry and AI scanning
+- **Workout Tracking** with active timer and history
+- **Progress Charts** for weight, calories, and streaks
+- **Profile Management** with goal setting
+
+---
+
+## 🛠️ Tech Stack
+Frontend: Flutter (Dart)
+Backend: Firebase (Auth, Firestore, Storage)
+AI: Google Gemini API (Vision & Pro models)
+State Mgmt: Riverpod
+Charts: fl_chart
