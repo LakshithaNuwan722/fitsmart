@@ -6,16 +6,16 @@ import '../models/food_item.dart';
 
 class FoodRecognitionService {
 
+  final _modelNames = [
+    'gemini-2.0-flash',
+    'gemini-2.5-flash',
+    'gemini-2.5-pro',
+  ];
+
   Future<List<FoodItem>> recognizeFood(File imageFile) async {
-    try {
-      final model = GenerativeModel(
-        model: 'gemini-2.0-flash',    // ✅ Available in your account
-        apiKey: ApiKeys.geminiApiKey,
-      );
+    final imageBytes = await imageFile.readAsBytes();
 
-      final imageBytes = await imageFile.readAsBytes();
-
-      final prompt = TextPart('''
+    final prompt = TextPart('''
 Analyze this food image and identify ALL food items visible.
 For each item, estimate nutritional information per serving shown.
 
@@ -37,35 +37,50 @@ Format:
 }
 ''');
 
-      final imagePart = DataPart('image/jpeg', imageBytes);
+    final imagePart = DataPart('image/jpeg', imageBytes);
 
-      final response = await model.generateContent([
-        Content.multi([prompt, imagePart])
-      ]);
+    // Try each model until one works
+    for (String modelName in _modelNames) {
+      try {
+        print('Trying model: $modelName');
 
-      final responseText = response.text;
+        final model = GenerativeModel(
+          model: modelName,
+          apiKey: ApiKeys.geminiApiKey,
+        );
 
-      if (responseText == null || responseText.isEmpty) {
-        throw Exception('Empty response from AI');
+        final response = await model.generateContent([
+          Content.multi([prompt, imagePart])
+        ]);
+
+        final responseText = response.text;
+
+        if (responseText == null || responseText.isEmpty) {
+          continue;
+        }
+
+        String cleaned = responseText
+            .replaceAll('```json', '')
+            .replaceAll('```', '')
+            .trim();
+
+        final data = jsonDecode(cleaned);
+
+        if (data['foods'] == null) {
+          continue;
+        }
+
+        print('Success with model: $modelName');
+        return (data['foods'] as List)
+            .map((f) => FoodItem.fromJson(Map<String, dynamic>.from(f)))
+            .toList();
+
+      } catch (e) {
+        print('Model $modelName failed: $e');
+        continue;
       }
-
-      String cleaned = responseText
-          .replaceAll('```json', '')
-          .replaceAll('```', '')
-          .trim();
-
-      final data = jsonDecode(cleaned);
-
-      if (data['foods'] == null) {
-        throw Exception('No foods detected');
-      }
-
-      return (data['foods'] as List)
-          .map((f) => FoodItem.fromJson(Map<String, dynamic>.from(f)))
-          .toList();
-    } catch (e) {
-      print('AI Error: $e');
-      throw Exception('Failed to recognize food: $e');
     }
+
+    throw Exception('All AI models are busy. Please try again in 30 seconds.');
   }
 }

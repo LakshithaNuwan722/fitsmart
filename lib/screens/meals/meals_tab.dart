@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../config/theme.dart';
 import '../../services/meal_service.dart';
 import '../../models/meal.dart';
 import 'add_meal_screen.dart';
@@ -13,34 +15,24 @@ class MealsTab extends StatelessWidget {
     final mealService = MealService();
 
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Meals 🍽️'),
+        title: const Text('Meals'),
+        backgroundColor: AppTheme.background,
       ),
       body: StreamBuilder<List<Meal>>(
         stream: mealService.getTodaysMeals(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
+            return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
           }
 
           final meals = snapshot.data ?? [];
 
-          if (meals.isEmpty) {
-            return _buildEmptyState(context);
-          }
+          if (meals.isEmpty) return _buildEmptyState(context);
 
-          // Calculate totals
           int totalCalories = 0;
-          double totalProtein = 0;
-          double totalCarbs = 0;
-          double totalFat = 0;
-
+          double totalProtein = 0, totalCarbs = 0, totalFat = 0;
           for (var meal in meals) {
             totalCalories = totalCalories + meal.totalCalories;
             totalProtein += meal.totalProtein;
@@ -50,54 +42,51 @@ class MealsTab extends StatelessWidget {
 
           return Column(
             children: [
-              // Summary Card
+              // Summary
               Container(
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.green.shade400, Colors.green.shade600],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
+                  gradient: AppTheme.greenGradient,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF00D9A6).withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
-                    const Text(
-                      "Today's Nutrition",
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
-                    ),
+                    Text("Today's Nutrition",
+                        style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13)),
                     const SizedBox(height: 8),
-                    Text(
-                      '$totalCalories kcal',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text('$totalCalories kcal',
+                        style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildMacro('Protein', '${totalProtein.toInt()}g',
-                            Colors.blue.shade200),
-                        _buildMacro('Carbs', '${totalCarbs.toInt()}g',
-                            Colors.orange.shade200),
-                        _buildMacro('Fat', '${totalFat.toInt()}g',
-                            Colors.red.shade200),
+                        _buildMacro('Protein', '${totalProtein.toInt()}g'),
+                        _buildMacro('Carbs', '${totalCarbs.toInt()}g'),
+                        _buildMacro('Fat', '${totalFat.toInt()}g'),
                       ],
                     ),
                   ],
                 ),
-              ),
+              ).animate().fadeIn().slideY(begin: -0.2),
 
-              // Meals List
+              // List
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: meals.length,
                   itemBuilder: (context, index) {
-                    return _buildMealCard(context, meals[index], mealService);
+                    return _buildMealCard(context, meals[index], mealService)
+                        .animate()
+                        .fadeIn(delay: Duration(milliseconds: 100 * index))
+                        .slideX(begin: 0.2);
                   },
                 ),
               ),
@@ -108,32 +97,20 @@ class MealsTab extends StatelessWidget {
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // AI Scan Button
           FloatingActionButton.small(
             heroTag: 'scan',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const ScanMealScreen()),
-              );
-            },
-            backgroundColor: Colors.deepPurple,
-            child: const Icon(Icons.camera_alt, color: Colors.white),
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const ScanMealScreen())),
+            backgroundColor: AppTheme.primary,
+            child: const Icon(Icons.camera_alt_rounded, color: Colors.white),
           ),
           const SizedBox(height: 8),
-          // Manual Add Button
           FloatingActionButton(
             heroTag: 'add',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const AddMealScreen()),
-              );
-            },
-            backgroundColor: Colors.green,
-            child: const Icon(Icons.add, color: Colors.white),
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const AddMealScreen())),
+            backgroundColor: AppTheme.secondary,
+            child: const Icon(Icons.add_rounded, color: Colors.white),
           ),
         ],
       ),
@@ -145,191 +122,149 @@ class MealsTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.restaurant_outlined, size: 80, color: Colors.grey[300]),
-          const SizedBox(height: 16),
-          Text(
-            'No meals logged today',
-            style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tap buttons below to add meals',
-            style: TextStyle(color: Colors.grey[500]),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const ScanMealScreen()),
-              );
-            },
-            icon: const Icon(Icons.camera_alt),
-            label: const Text('📸 Scan with AI'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 24, vertical: 12),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
             ),
+            child: const Icon(Icons.restaurant_outlined, size: 48, color: AppTheme.primary),
+          ),
+          const SizedBox(height: 20),
+          const Text('No meals logged today',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          const SizedBox(height: 8),
+          const Text('Scan food or add manually',
+              style: TextStyle(color: AppTheme.textSecondary)),
+          const SizedBox(height: 24),
+          Container(
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: AppTheme.buttonShadow,
+            ),
+            child: ElevatedButton.icon(
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const ScanMealScreen())),
+              icon: const Icon(Icons.camera_alt_rounded),
+              label: const Text('Scan with AI'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              ),
+            ),
+          ),
+        ],
+      ).animate().fadeIn(duration: 600.ms),
+    );
+  }
+
+  Widget _buildMacro(String label, String value) {
+    return Column(
+      children: [
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildMealCard(BuildContext context, Meal meal, MealService service) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48, height: 48,
+            decoration: BoxDecoration(
+              color: _getMealColor(meal.mealType).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(_getMealIcon(meal.mealType), color: _getMealColor(meal.mealType), size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  meal.mealType[0].toUpperCase() + meal.mealType.substring(1),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  meal.foodItems.map((f) => f.name).join(', '),
+                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  DateFormat('h:mm a').format(meal.timestamp.toDate()),
+                  style: TextStyle(color: AppTheme.textSecondary.withOpacity(0.6), fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('${meal.totalCalories}',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.secondary)),
+              const Text('kcal', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+            ],
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  title: const Text('Delete Meal?'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: TextButton.styleFrom(foregroundColor: AppTheme.accent),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) await service.deleteMeal(meal.id);
+            },
+            child: Icon(Icons.close_rounded, color: AppTheme.textSecondary.withOpacity(0.4), size: 18),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMacro(String label, String value, Color color) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            color: color,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-      ],
-    );
-  }
-
-  Widget _buildMealCard(
-      BuildContext context, Meal meal, MealService mealService) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            // Meal Type Icon
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: _getMealTypeColor(meal.mealType).withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                _getMealTypeIcon(meal.mealType),
-                color: _getMealTypeColor(meal.mealType),
-                size: 28,
-              ),
-            ),
-
-            const SizedBox(width: 12),
-
-            // Meal Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    meal.mealType[0].toUpperCase() +
-                        meal.mealType.substring(1),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    meal.foodItems.map((f) => f.name).join(', '),
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    DateFormat('h:mm a').format(meal.timestamp.toDate()),
-                    style: TextStyle(color: Colors.grey[500], fontSize: 11),
-                  ),
-                ],
-              ),
-            ),
-
-            // Calories
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${meal.totalCalories}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-                const Text('kcal',
-                    style: TextStyle(fontSize: 11, color: Colors.grey)),
-              ],
-            ),
-
-            // Delete
-            IconButton(
-              icon: const Icon(Icons.delete_outline,
-                  color: Colors.red, size: 20),
-              onPressed: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Delete Meal?'),
-                    content: const Text('This cannot be undone.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: TextButton.styleFrom(
-                            foregroundColor: Colors.red),
-                        child: const Text('Delete'),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirm == true) {
-                  await mealService.deleteMeal(meal.id);
-                }
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _getMealTypeIcon(String type) {
+  IconData _getMealIcon(String type) {
     switch (type) {
-      case 'breakfast':
-        return Icons.free_breakfast;
-      case 'lunch':
-        return Icons.lunch_dining;
-      case 'dinner':
-        return Icons.dinner_dining;
-      case 'snack':
-        return Icons.cookie;
-      default:
-        return Icons.restaurant;
+      case 'breakfast': return Icons.free_breakfast_rounded;
+      case 'lunch': return Icons.lunch_dining_rounded;
+      case 'dinner': return Icons.dinner_dining_rounded;
+      case 'snack': return Icons.cookie_rounded;
+      default: return Icons.restaurant_rounded;
     }
   }
 
-  Color _getMealTypeColor(String type) {
+  Color _getMealColor(String type) {
     switch (type) {
-      case 'breakfast':
-        return Colors.orange;
-      case 'lunch':
-        return Colors.green;
-      case 'dinner':
-        return Colors.blue;
-      case 'snack':
-        return Colors.purple;
-      default:
-        return Colors.grey;
+      case 'breakfast': return Colors.orange;
+      case 'lunch': return AppTheme.secondary;
+      case 'dinner': return AppTheme.primary;
+      case 'snack': return Colors.purple;
+      default: return Colors.grey;
     }
   }
 }
