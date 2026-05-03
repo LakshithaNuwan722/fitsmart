@@ -6,6 +6,8 @@ import '../../services/progress_service.dart';
 import '../../utils/calorie_calculator.dart';
 import '../../config/theme.dart';
 import '../subscription/paywall_screen.dart';
+import 'export_screen.dart';
+import 'package:intl/intl.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -110,195 +112,218 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
+  // Replace the weight stat card with StreamBuilder:
+
   Widget _buildProfileView(Map<String, dynamic> data) {
-    return Column(
-      children: [
-        // Profile Avatar Card
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            gradient: AppTheme.darkGradient,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF1A1D3E).withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.1),
-                  border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
-                ),
-                child: Center(
-                  child: Text(
-                    (data['name'] ?? 'U')[0].toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      data['name'] ?? 'User',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      data['email'] ?? '',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.2),
-
-        const SizedBox(height: 24),
-
-        // Settings / Stats Header
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            'Your Statistics',
-            style: Theme.of(context).textTheme.titleLarge,
-          ).animate().fadeIn(delay: 200.ms),
-        ),
-        const SizedBox(height: 12),
-
-        // Stats Grid
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                label: 'Goal',
-                value: _getGoalName(data['goal'] ?? 'maintain'),
-                icon: Icons.flag_rounded,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Profile Avatar
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: AppTheme.primary.withOpacity(0.1),
+            child: Text(
+              (data['name'] ?? 'U')[0].toUpperCase(),
+              style: const TextStyle(
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
                 color: AppTheme.primary,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                label: 'Daily Target',
-                value: '${data['dailyCalorieTarget'] ?? 2000} kcal',
-                icon: Icons.local_fire_department_rounded,
-                color: AppTheme.accent,
-              ),
-            ),
-          ],
-        ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2),
-
-        const SizedBox(height: 12),
-
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                label: 'Height',
-                value: '${(data['height'] ?? 170).toInt()} cm',
-                icon: Icons.height_rounded,
-                color: AppTheme.secondary,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                label: 'Weight',
-                value: '${(data['weight'] ?? 70).toInt()} kg',
-                icon: Icons.monitor_weight_rounded,
-                color: const Color(0xFF56CCF2), // Blue
-              ),
-            ),
-          ],
-        ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
-
-        const SizedBox(height: 12),
-
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                label: 'Age',
-                value: '${data['age'] ?? 20} yrs',
-                icon: Icons.cake_rounded,
-                color: const Color(0xFFFF9A56), // Orange
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                label: 'Activity',
-                value: _getActivityName(data['activityLevel'] ?? 'moderate'),
-                icon: Icons.directions_run_rounded,
-                color: AppTheme.primaryDark,
-              ),
-            ),
-          ],
-        ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2),
-
-        const SizedBox(height: 32),
-
-        // Actions
-        _buildActionCard(
-          icon: Icons.monitor_weight_rounded,
-          label: 'Log Today\'s Weight',
-          color: AppTheme.secondary,
-          onTap: () => _showLogWeightDialog(),
-        ).animate().fadeIn(delay: 600.ms).slideX(begin: -0.1),
-
-        const SizedBox(height: 12),
-
-        _buildActionCard(
-          icon: Icons.workspace_premium_rounded,
-          label: 'Upgrade to Premium ⭐',
-          color: const Color(0xFFFFB74D), // Amber
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFFB74D), Color(0xFFFF9800)],
           ),
-          textColor: Colors.white,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const PaywallScreen()),
-            );
-          },
-        ).animate().fadeIn(delay: 700.ms).slideX(begin: -0.1),
+          const SizedBox(height: 12),
+          Text(
+            data['name'] ?? 'User',
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            data['email'] ?? '',
+            style: const TextStyle(color: AppTheme.textSecondary),
+          ),
 
-        const SizedBox(height: 12),
+          const SizedBox(height: 24),
 
-        _buildActionCard(
-          icon: Icons.logout_rounded,
-          label: 'Logout',
-          color: AppTheme.accent,
-          background: AppTheme.accent.withOpacity(0.1),
-          onTap: () => FirebaseAuth.instance.signOut(),
-        ).animate().fadeIn(delay: 800.ms).slideX(begin: -0.1),
-        
-        const SizedBox(height: 24),
-      ],
+          // Stats Cards Row 1
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  label: '🎯 Goal',
+                  value: _getGoalName(data['goal'] ?? 'maintain'),
+                  icon: Icons.flag_rounded,
+                  color: Colors.deepPurple,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  label: '🔥 Daily Target',
+                  value: '${data['dailyCalorieTarget'] ?? 2000} kcal',
+                  icon: Icons.local_fire_department_rounded,
+                  color: Colors.orange,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  label: '📏 Height',
+                  value: '${(data['height'] ?? 170).toInt()} cm',
+                  icon: Icons.height_rounded,
+                  color: Colors.blue,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser!.uid)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    final userData = snapshot.data?.data() as Map<String, dynamic>?;
+                    final weight = (userData?['weight'] ?? data['weight'] ?? 70).toDouble();
+
+                    return _buildStatCard(
+                      label: '⚖️ Weight',
+                      value: '${weight.toStringAsFixed(1)} kg',
+                      icon: Icons.monitor_weight_rounded,
+                      color: Colors.green,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  label: '🎂 Age',
+                  value: '${data['age'] ?? 20} years',
+                  icon: Icons.cake_rounded,
+                  color: Colors.pink,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  label: '🏃 Activity',
+                  value: _getActivityName(data['activityLevel'] ?? 'moderate'),
+                  icon: Icons.directions_run_rounded,
+                  color: Colors.teal,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // Log Weight Button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _showLogWeightDialog(),
+              icon: const Icon(Icons.monitor_weight_rounded),
+              label: const Text('Log Today\'s Weight'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.all(16),
+                foregroundColor: AppTheme.primary,
+                side: const BorderSide(color: AppTheme.primary),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Export Button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ExportScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.download_rounded),
+              label: const Text('Export Reports ⭐'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.all(16),
+                foregroundColor: AppTheme.primary,
+                side: const BorderSide(color: AppTheme.primary),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Upgrade Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PaywallScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.star_rounded),
+              label: const Text('Upgrade to Premium ⭐'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.all(16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Logout Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => FirebaseAuth.instance.signOut(),
+              icon: const Icon(Icons.logout_rounded),
+              label: const Text('Logout'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.all(16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -628,63 +653,129 @@ class _ProfileTabState extends State<ProfileTab> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Log Weight', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Container(
-          decoration: BoxDecoration(
-            color: AppTheme.background,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: TextFormField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-            decoration: InputDecoration(
-              labelText: 'Weight (kg)',
-              hintText: 'e.g. 72.5',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
-              ),
-              filled: true,
-              fillColor: AppTheme.background,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Row(
+          children: [
+            Text('⚖️', style: TextStyle(fontSize: 24)),
+            SizedBox(width: 8),
+            Text('Log Weight'),
+          ],
+        ),
+        content: TextFormField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: 'Weight (kg)',
+            hintText: 'e.g. 72.5',
+            suffixText: 'kg',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppTheme.primary, width: 2),
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+            child: const Text('Cancel'),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              final weight = double.tryParse(controller.text);
-              if (weight != null) {
-                await _progressService.logWeight(weight);
-                if (mounted) {
-                  Navigator.pop(context);
+          Container(
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: ElevatedButton(
+              onPressed: () async {
+                final weight = double.tryParse(controller.text);
+                if (weight == null || weight <= 0) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('✅ Weight logged!'),
-                      backgroundColor: AppTheme.secondary,
-                      behavior: SnackBarBehavior.floating,
+                      content: Text('Please enter a valid weight'),
+                      backgroundColor: Colors.red,
                     ),
                   );
+                  return;
                 }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+
+                Navigator.pop(context);
+
+                // Save weight
+                await _saveWeight(weight);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Save'),
             ),
-            child: const Text('Save'),
           ),
         ],
       ),
     );
+  }
+
+  // ✅ New separate save weight method
+  Future<void> _saveWeight(double weight) async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+      // ✅ Save to BOTH places
+      // 1. Save to user profile (shows in stats card)
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .update({'weight': weight});
+
+      // 2. Save to dailyLogs (shows in progress chart)
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('dailyLogs')
+          .doc(today)
+          .set({
+        'date': today,
+        'weight': weight,
+      }, SetOptions(merge: true));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Text('Weight logged: ${weight.toStringAsFixed(1)} kg ✅'),
+              ],
+            ),
+            backgroundColor: AppTheme.secondary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+
+      print('✅ Weight saved: ${weight}kg to profile and dailyLogs/$today');
+    } catch (e) {
+      print('❌ Error saving weight: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save weight: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   String _getGoalName(String goal) {

@@ -236,22 +236,26 @@ class ProgressService {
               .doc(dateStr)
               .get();
 
-          if (doc.exists &&
-              doc.data() != null &&
-              doc.data()!['weight'] != null) {
-            weights.add({
-              'date': dateStr,
-              'weight': (doc.data()!['weight'] as num).toDouble(),
-            });
+          if (doc.exists && doc.data() != null) {
+            final data = doc.data()!;
+            // ✅ Check weight exists and is not null
+            if (data['weight'] != null) {
+              weights.add({
+                'date': dateStr,
+                'weight': (data['weight'] as num).toDouble(),
+              });
+              print('✅ Weight found: ${data['weight']}kg on $dateStr');
+            }
           }
         } catch (e) {
-          // Skip this date
+          print('Error getting weight for $dateStr: $e');
         }
       }
 
+      print('✅ Total weight entries found: ${weights.length}');
       return weights;
     } catch (e) {
-      print('Error getting weight history: $e');
+      print('❌ Error getting weight history: $e');
       return [];
     }
   }

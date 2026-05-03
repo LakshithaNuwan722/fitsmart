@@ -8,6 +8,9 @@ import '../../services/subscription_service.dart';
 import '../../models/daily_log.dart';
 import '../../models/subscription.dart';
 import '../subscription/paywall_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -700,82 +703,108 @@ class _ProgressScreenState extends State<ProgressScreen>
   }
 
   Widget _buildBMICard() {
-    final weight = _weightHistory.isNotEmpty ? _weightHistory.last['weight'] as double : 70.0;
-    final height = 1.70;
-    final bmi = weight / (height * height);
+    // ✅ Get actual weight from user profile
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .get(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    String category;
-    Color color;
-    String emoji;
+        final userData = snapshot.data!.data() as Map<String, dynamic>?;
+        final weight = (userData?['weight'] ?? 70).toDouble();
+        final heightCm = (userData?['height'] ?? 170).toDouble();
+        final heightM = heightCm / 100;
+        final bmi = weight / (heightM * heightM);
 
-    if (bmi < 18.5) {
-      category = 'Underweight'; color = Colors.blue; emoji = '📉';
-    } else if (bmi < 25) {
-      category = 'Normal Weight'; color = Colors.green; emoji = '✅';
-    } else if (bmi < 30) {
-      category = 'Overweight'; color = Colors.orange; emoji = '⚠️';
-    } else {
-      category = 'Obese'; color = Colors.red; emoji = '🚨';
-    }
+        String category;
+        Color color;
+        String emoji;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Column(
-        children: [
-          Row(
+        if (bmi < 18.5) {
+          category = 'Underweight'; color = Colors.blue; emoji = '📉';
+        } else if (bmi < 25) {
+          category = 'Normal Weight'; color = Colors.green; emoji = '✅';
+        } else if (bmi < 30) {
+          category = 'Overweight'; color = Colors.orange; emoji = '⚠️';
+        } else {
+          category = 'Obese'; color = Colors.red; emoji = '🚨';
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: AppTheme.cardShadow,
+          ),
+          child: Column(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 32)),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(category,
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-                    Text('BMI: ${bmi.toStringAsFixed(1)}',
-                        style: const TextStyle(color: AppTheme.textSecondary)),
-                  ],
+              Row(
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 32)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(category,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: color,
+                            )),
+                        Text(
+                          'BMI: ${bmi.toStringAsFixed(1)} | ${weight.toStringAsFixed(1)}kg | ${heightCm.toInt()}cm',
+                          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      bmi.toStringAsFixed(1),
+                      style: TextStyle(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: (bmi / 40).clamp(0.0, 1.0),
+                  minHeight: 10,
+                  backgroundColor: Colors.grey.shade100,
+                  valueColor: AlwaysStoppedAnimation(color),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text('${bmi.toStringAsFixed(1)}',
-                    style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18)),
+              const SizedBox(height: 8),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Under', style: TextStyle(fontSize: 10, color: Colors.blue)),
+                  Text('Normal', style: TextStyle(fontSize: 10, color: Colors.green)),
+                  Text('Over', style: TextStyle(fontSize: 10, color: Colors.orange)),
+                  Text('Obese', style: TextStyle(fontSize: 10, color: Colors.red)),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // BMI Scale
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: (bmi / 40).clamp(0.0, 1.0),
-              minHeight: 10,
-              backgroundColor: Colors.grey.shade100,
-              valueColor: AlwaysStoppedAnimation(color),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Underweight', style: TextStyle(fontSize: 10, color: Colors.blue)),
-              Text('Normal', style: TextStyle(fontSize: 10, color: Colors.green)),
-              Text('Overweight', style: TextStyle(fontSize: 10, color: Colors.orange)),
-              Text('Obese', style: TextStyle(fontSize: 10, color: Colors.red)),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
