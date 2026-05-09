@@ -291,8 +291,8 @@ users/ {userId}
 
 **Lakshitha**
 
-- GitHub: [@YOUR_USERNAME](https://github.com/LakshithaNuwan722)
-- LinkedIn: [Your Profile](www.linkedin.com/in/lakshitha-wijekoon-612b70357)
+- GitHub: [@Lakshitha Wijekoon](https://github.com/LakshithaNuwan722)
+- LinkedIn: [Lakshitha Wijekoon](www.linkedin.com/in/lakshitha-wijekoon-612b70357)
 - Email: lakshithanuwan722@gmail.com
 
 ---
