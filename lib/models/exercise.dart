@@ -16,13 +16,37 @@ class Exercise {
   });
 
   factory Exercise.fromJson(Map<String, dynamic> json) {
+    // Safe int converter
+    int safeInt(dynamic value, int defaultValue) {
+      if (value == null) return defaultValue;
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    }
+
+    // Safe double converter
+    double safeDouble(dynamic value, double defaultValue) {
+      if (value == null) return defaultValue;
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    }
+
     return Exercise(
-      name: json['name'] ?? 'Unknown',
-      sets: json['sets'] ?? 3,
-      reps: json['reps'] ?? 10,
-      weight: (json['suggested_weight_kg'] ?? json['weight'] ?? 0).toDouble(),
-      restSeconds: json['rest_seconds'] ?? json['restSeconds'] ?? 60,
-      notes: json['notes'],
+      name: json['name']?.toString() ?? 'Unknown',
+      sets: safeInt(json['sets'], 3),
+      reps: safeInt(json['reps'], 10),
+      weight: safeDouble(
+        json['suggested_weight_kg'] ?? json['weight'],
+        0.0,
+      ),
+      restSeconds: safeInt(
+        json['rest_seconds'] ?? json['restSeconds'],
+        60,
+      ),
+      notes: json['notes']?.toString(),
     );
   }
 
