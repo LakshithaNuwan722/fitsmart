@@ -35,21 +35,30 @@ class Workout {
   });
 
   factory Workout.fromMap(Map<String, dynamic> map, String id) {
+    // Safe int converter
+    int safeInt(dynamic value, int defaultValue) {
+      if (value == null) return defaultValue;
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? defaultValue;
+      return defaultValue;
+    }
+
     return Workout(
       id: id,
-      date: map['date'] ?? '',
-      type: map['type'] ?? 'strength',
-      name: map['name'] ?? 'Workout',
-      duration: (map['duration'] ?? 30).toInt(),
-      caloriesBurned: (map['caloriesBurned'] ?? 0).toInt(),
+      date: map['date']?.toString() ?? '',
+      type: map['type']?.toString() ?? 'strength',
+      name: map['name']?.toString() ?? 'Workout',
+      duration: safeInt(map['duration'], 30),
+      caloriesBurned: safeInt(map['caloriesBurned'], 0),
       isAIGenerated: map['isAIGenerated'] ?? false,
       exercises: (map['exercises'] as List<dynamic>?)
           ?.map((e) => Exercise.fromJson(Map<String, dynamic>.from(e)))
           .toList() ??
           [],
       completed: map['completed'] ?? false,
-      difficulty: map['difficulty'],
-      trainerTips: map['trainerTips'],
+      difficulty: map['difficulty']?.toString(),
+      trainerTips: map['trainerTips']?.toString(),
       warmup: (map['warmup'] as List<dynamic>?)
           ?.map((e) => e.toString())
           .toList(),
