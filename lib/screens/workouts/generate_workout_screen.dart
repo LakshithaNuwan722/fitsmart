@@ -94,6 +94,7 @@ class _GenerateWorkoutScreenState extends State<GenerateWorkoutScreen> {
   // ─── Save and Start ──────────────────────────────────────────────
   Future<void> _saveAndStartWorkout() async {
     if (_generatedWorkout == null) return;
+
     setState(() => _isSaving = true);
 
     try {
@@ -109,18 +110,27 @@ class _GenerateWorkoutScreenState extends State<GenerateWorkoutScreen> {
           ?.map((e) => e.toString())
           .toList();
 
+      // ✅ Safe conversion helper
+      int safeInt(dynamic value, int defaultValue) {
+        if (value == null) return defaultValue;
+        if (value is int) return value;
+        if (value is double) return value.toInt();
+        if (value is String) return int.tryParse(value) ?? defaultValue;
+        return defaultValue;
+      }
+
       final workout = Workout(
         id: '',
         date: DateFormat('yyyy-MM-dd').format(DateTime.now()),
-        type: _generatedWorkout!['type'] ?? 'strength',
-        name: _generatedWorkout!['workout_name'] ?? 'AI Workout',
-        duration: (_generatedWorkout!['estimated_duration'] ?? _duration).toInt(),
-        caloriesBurned: (_generatedWorkout!['estimated_calories_burned'] ?? 200).toInt(),
+        type: _generatedWorkout!['type']?.toString() ?? 'strength',
+        name: _generatedWorkout!['workout_name']?.toString() ?? 'AI Workout',
+        duration: safeInt(_generatedWorkout!['estimated_duration'], _duration),
+        caloriesBurned: safeInt(_generatedWorkout!['estimated_calories_burned'], 200),
         isAIGenerated: true,
         exercises: exercises,
         completed: false,
-        difficulty: _generatedWorkout!['difficulty'],
-        trainerTips: _generatedWorkout!['trainer_tips'],
+        difficulty: _generatedWorkout!['difficulty']?.toString(),
+        trainerTips: _generatedWorkout!['trainer_tips']?.toString(),
         warmup: warmup,
         cooldown: cooldown,
         timestamp: Timestamp.now(),
@@ -129,6 +139,13 @@ class _GenerateWorkoutScreenState extends State<GenerateWorkoutScreen> {
       await _workoutService.addWorkout(workout);
 
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Workout saved!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -144,7 +161,10 @@ class _GenerateWorkoutScreenState extends State<GenerateWorkoutScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save: $e'), backgroundColor: AppTheme.accent),
+          SnackBar(
+            content: Text('Failed to save: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
